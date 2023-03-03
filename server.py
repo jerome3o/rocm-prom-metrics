@@ -10,54 +10,51 @@ _flags = [
     "--showuse",
     "--showmemuse",
     "--showvoltage",
-
-    # Other values, to be sorted
-    # "--showhw",
-    # "--showallinfo",
-    # "--showid",
-    # "--showvbios",
-    # "--showdriverversion",
-    # "--showfwinfo",
-    # "--showmclkrange",
-    # "--showmemvendor",
-    # "--showsclkrange",
-    # "--showproductname",
-    # "--showserial",
-    # "--showuniqueid",
-    # "--showvoltagerange",
-    # "--showbus",
-    # "--showpagesinfo",
-    # "--showpendingpages",
-    # "--showretiredpages",
-    # "--showunreservablepages",
-    # "--showbw",
-    # "--showclocks",
-    # "--showgpuclocks",
-    # "--showprofile",
-    # "--showmaxpower",
-    # "--showmemoverdrive",
-    # "--showoverdrive",
-    # "--showperflevel",
-    # "--showclkvolt",
-    # "--showclkfrq",
-    # "--showmeminfo",
-    # "--showpids",
-    # "--showpidgpus",
-    # "--showreplaycount",
-    # "--showrasinfo",
-    # "--showvc",
-    # "--showxgmierr",
-    # "--showtopo",
-    # "--showtopoaccess",
-    # "--showtopoweight",
-    # "--showtopohops",
-    # "--showtopotype",
-    # "--showtoponuma",
-    # "--showenergycounter",
-    # "--shownodesbw",
+    # This hopefully covers everything
+    "--showallinfo",
+    # See ./other_rocm_smi_options.txt for more options
 ]
 
-output_str = subprocess.check_output(["rocm-smi", "--alldevices", "--json"] + _flags)
-output = json.loads(output_str)
-print(json.dumps(output, indent=4))
 
+def get_smi_output() -> dict:
+    """
+    Example output:
+    {
+        "card0": {
+            "GPU ID": "0x73bf",
+            "Unique ID": "0xac1b58f8c066790f",
+            "VBIOS version": "113-D4140EXL-XL",
+            "Temperature (Sensor edge) (C)": "52.0",
+            ...
+        },
+        "card1": {
+            ...
+        },
+        ...
+        "system": {
+            "Driver version": "5.18.13"
+        }
+    }
+    """
+    output_str = subprocess.check_output(
+        [
+            "rocm-smi",
+            "--alldevices",
+            "--json",
+            *_flags,
+        ]
+    )
+    return json.loads(output_str)
+
+
+def main():
+   
+    # get output dict
+    output = get_smi_output()
+
+
+
+if __name__ == "__main__":
+    import logging
+    logging.basicConfig(level=logging.INFO)
+    main()
