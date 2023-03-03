@@ -72,7 +72,7 @@ def _define_gauges(output: dict) -> Dict[str, Gauge]:
 
     # card will be a label, so get unqiue metrics across all cards
     metric_info = list(set([
-        (get_prom_friendly_metric_name(metric_name), metric_name)
+        (_get_prom_friendly_metric_name(metric_name), metric_name)
         for card in output.values()
         for metric_name in card.keys()
     ]))
