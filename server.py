@@ -2,6 +2,7 @@ import subprocess
 import json
 import re
 import os
+import time
 from typing import Dict, Union
 from prometheus_client import start_http_server, Gauge
 
@@ -23,30 +24,30 @@ _flags = [
 ]
 
 _metrics = [
-    "Temperature (Sensor edge) (C)", # "52.0",
-    "Temperature (Sensor junction) (C)", # "56.0",
-    "Temperature (Sensor memory) (C)", # "52.0",
-    "GPU OverDrive value (%)", # "0",
-    "GPU Memory OverDrive value (%)", # "0",
-    "Max Graphics Package Power (W)", # "203.0",
-    "Average Graphics Package Power (W)", # "35.0",
-    "GPU use (%)", # "99",
-    "GPU memory use (%)", # "0",
-    "PCIe Replay Count", # "0",
-    "Voltage (mV)", # "1018",
-    "Energy counter", # "3436801806",
-    "Accumulated Energy (uJ)", # "52583068287.32"
+    "Temperature (Sensor edge) (C)",  # "52.0",
+    "Temperature (Sensor junction) (C)",  # "56.0",
+    "Temperature (Sensor memory) (C)",  # "52.0",
+    "GPU OverDrive value (%)",  # "0",
+    "GPU Memory OverDrive value (%)",  # "0",
+    "Max Graphics Package Power (W)",  # "203.0",
+    "Average Graphics Package Power (W)",  # "35.0",
+    "GPU use (%)",  # "99",
+    "GPU memory use (%)",  # "0",
+    "PCIe Replay Count",  # "0",
+    "Voltage (mV)",  # "1018",
+    "Energy counter",  # "3436801806",
+    "Accumulated Energy (uJ)",  # "52583068287.32"
 ]
 
 _labels = [
-    "Serial Number", # "ac1b58f8c066790f",
-    "GPU ID", # "0x73bf",
-    "Unique ID", # "0xac1b58f8c066790f",
-    "PCI Bus", # "0000:03:00.0",
-    "Card series", # "0x73bf",
-    "Card model", # "0x2407",
-    "Card vendor", # "Advanced Micro Devices, Inc. [AMD/ATI]",
-    "Card SKU", # "D4140E",
+    "Serial Number",  # "ac1b58f8c066790f",
+    "GPU ID",  # "0x73bf",
+    "Unique ID",  # "0xac1b58f8c066790f",
+    "PCI Bus",  # "0000:03:00.0",
+    "Card series",  # "0x73bf",
+    "Card model",  # "0x2407",
+    "Card vendor",  # "Advanced Micro Devices, Inc. [AMD/ATI]",
+    "Card SKU",  # "D4140E",
     # "Memory Activity", # "N/A",
     # "GPU memory vendor", # "samsung",
     # "pcie clock level", # "1 (8.0GT/s x8)",
@@ -84,6 +85,7 @@ _labels = [
     # "VCE firmware version", # "0x00000000",
     # "VCN firmware version", # "0x0211a000",
 ]
+
 
 def get_smi_output() -> Dict[str, Dict[str, str]]:
     """
@@ -146,30 +148,26 @@ def _try_cast_float(value: str) -> Union[float, str]:
         return value
 
 
+def _get_label_dict() -> Dict[str, str]:
+    return {label: _get_prom_friendly_metric_name(label) for label in _labels}
+
+
 def _define_gauges(output: dict) -> Union[Dict[str, Gauge], Dict[str, str]]:
 
     # TODO(j.swannack): need to make guages+labels adhere
     #   to prometheus naming conventions
 
     # card will be a label, so get unqiue metrics across all cards
-    metric_info = list(
-        set(
-            [
-                (_get_prom_friendly_metric_name(name), name)
-                for card in output.values()
-                for name, value in card.items()
-            ]
-        )
-    )
+    labels = _get_label_dict()
 
     # define gauges from metric_info
     return {
         metric_name: Gauge(
+            _get_prom_friendly_metric_name(metric_name),
             metric_name,
-            raw_name,
-            labelnames=["gpu"],
+            labelnames=["gpu", *labels.values()],
         )
-        for metric_name, raw_name in metric_info
+        for metric_name in _metrics
     }
 
 
@@ -184,16 +182,29 @@ def main():
     # define gauges
     gauges = _define_gauges(output)
 
+    labels = _get_label_dict()
+
     while True:
         # get new output
         output = get_smi_output()
 
         # update gauges
         for card_name, card_metrics in output.items():
+            
+            # ignore system
+            if card_name == "system":
+                continue
+
+            # get label values
+            label_values = {label: card_metrics[label_raw] for label_raw, label in labels.items()}
 
             for metric_name, metric_value in card_metrics.items():
+                
+                if metric_name not in _metrics:
+                    continue
+
                 prom_metric_name = _get_prom_friendly_metric_name(metric_name)
-                gauges[prom_metric_name].labels(gpu=card_name).set(metric_value)
+                gauges[metric_name].labels(gpu=card_name, **label_values).set(metric_value)
 
         # sleep for 1 second
         time.sleep(1)
