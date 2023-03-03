@@ -93,7 +93,7 @@ def _define_gauges_and_labels(output: dict) -> Union[Dict[str, Gauge], Dict[str,
             [
                 (_get_prom_friendly_metric_name(name), name, value)
                 for card in output.values()
-                for name in card.keys()
+                for name, value in card.items()
             ]
         )
     )
