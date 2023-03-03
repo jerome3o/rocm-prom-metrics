@@ -74,15 +74,17 @@ def _get_prom_friendly_metric_name(metric_name: str) -> str:
     return metric_name
 
 
-def _can_cast_to_float(value: str) -> bool:
+def _try_cast_float(value: str) -> Union[float, str]:
+    """
+    Try to cast value to float, if not return original value
+    """
     try:
-        float(value)
-        return True
+        return float(value)
     except ValueError:
-        return False
+        return value
 
 
-def _define_gauges_and_labels(output: dict) -> Union[Dict[str, Gauge], Dict[str, str]]:
+def _define_gauges(output: dict) -> Union[Dict[str, Gauge], Dict[str, str]]:
 
     # TODO(j.swannack): need to make guages+labels adhere
     #   to prometheus naming conventions
@@ -91,27 +93,22 @@ def _define_gauges_and_labels(output: dict) -> Union[Dict[str, Gauge], Dict[str,
     metric_info = list(
         set(
             [
-                (_get_prom_friendly_metric_name(name), name, value)
+                (_get_prom_friendly_metric_name(name), name)
                 for card in output.values()
                 for name, value in card.items()
             ]
         )
     )
 
-    # metrics that can't be cast to float should be used as labels
-    label_dict = {
-        raw_name: name for name, raw_name, value in metric_info if not _can_cast_to_float(value)
-    }
-
     # define gauges from metric_info
     return {
         metric_name: Gauge(
             metric_name,
             raw_name,
-            labelnames=["gpu", *label_dict],
+            labelnames=["gpu"],
         )
-        for metric_name, raw_name, _ in metric_info
-    }, label_dict
+        for metric_name, raw_name in metric_info
+    }
 
 
 def main():
@@ -123,7 +120,7 @@ def main():
     start_http_server(8000)
 
     # define gauges
-    gauges, label_dict = _define_gauges_and_labels(output)
+    gauges = _define_gauges(output)
 
     while True:
         # get new output
@@ -132,18 +129,9 @@ def main():
         # update gauges
         for card_name, card_metrics in output.items():
 
-            # get labels
-            label_values = {
-                label_name: card_metrics[raw_name] for raw_name, label_name in label_dict.items()
-            }
-
             for metric_name, metric_value in card_metrics.items():
-                # ignore labels
-                if metric_name in label_dict:
-                    continue
-
                 prom_metric_name = _get_prom_friendly_metric_name(metric_name)
-                gauges[prom_metric_name].labels(gpu=card_name, **label_values).set(metric_value)
+                gauges[prom_metric_name].labels(gpu=card_name).set(metric_value)
 
         # sleep for 1 second
         time.sleep(1)
@@ -153,4 +141,11 @@ if __name__ == "__main__":
     import logging
 
     logging.basicConfig(level=logging.INFO)
-    main()
+
+    if DEV:
+        import ipdb
+
+        with ipdb.launch_ipdb_on_exception():
+            main()
+    else:
+        main()
