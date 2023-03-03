@@ -1,8 +1,13 @@
 import subprocess
 import json
 import re
+import os
 from typing import Dict, Union
 from prometheus_client import start_http_server, Gauge
+
+
+# get development flag
+DEV = os.environ.get("DEV", False)
 
 _flags = [
     # HW related
@@ -38,15 +43,20 @@ def get_smi_output() -> Dict[str, Dict[str, str]]:
         }
     }
     """
-    output_str = subprocess.check_output(
-        [
-            "rocm-smi",
-            "--alldevices",
-            "--json",
-            *_flags,
-        ]
-    )
-    return json.loads(output_str)
+    if not DEV:
+        output_str = subprocess.check_output(
+            [
+                "rocm-smi",
+                "--alldevices",
+                "--json",
+                *_flags,
+            ]
+        )
+        return json.loads(output_str)
+
+    # for dev read in example.json
+    with open("example.json", "r") as f:
+        return json.load(f)
 
 
 def _get_prom_friendly_metric_name(metric_name: str) -> str:
