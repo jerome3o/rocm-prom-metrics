@@ -12,6 +12,7 @@ _flags = [
     "--showuse",
     "--showmemuse",
     "--showvoltage",
+
     # This hopefully covers everything
     "--showallinfo",
     # See ./other_rocm_smi_options.txt for more options
@@ -65,6 +66,10 @@ def _get_prom_friendly_metric_name(metric_name: str) -> str:
 
 
 def _define_gauges(output: dict) -> Dict[str, Gauge]:
+
+    # TODO(j.swannack): need to make guages+labels adhere 
+    #   to prometheus naming conventions
+
     # card will be a label, so get unqiue metrics across all cards
     metric_info = list(set([
         (get_prom_friendly_metric_name(metric_name), metric_name)
@@ -91,6 +96,22 @@ def main():
 
     # start prometheus server
     start_http_server(8000)
+
+    # define gauges
+    gauges = _define_gauges(output)
+
+    while True:
+        # get new output
+        output = get_smi_output()
+
+        # update gauges
+        for card_name, card_metrics in output.items():
+            for metric_name, metric_value in card_metrics.items():
+                prom_metric_name = _get_prom_friendly_metric_name(metric_name)
+                gauges[prom_metric_name].labels(gpu=card_name).set(metric_value)
+
+        # sleep for 1 second
+        time.sleep(1)
 
 if __name__ == "__main__":
     import logging
