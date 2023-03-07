@@ -9,6 +9,7 @@ from prometheus_client import start_http_server, Gauge
 
 # get development flag
 DEV = os.environ.get("DEV", False)
+PORT = os.environ.get("PORT", 9101)
 
 _flags = [
     # HW related
@@ -177,7 +178,7 @@ def main():
     output = get_smi_output()
 
     # start prometheus server
-    start_http_server(8000)
+    start_http_server(PORT)
 
     # define gauges
     gauges = _define_gauges(output)

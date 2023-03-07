@@ -1,0 +1,13 @@
+[Unit]
+Description=ROCm metrics server for promQL
+; After=network.target
+
+[Service]
+User=jerome
+WorkingDirectory=/home/jerome/source/rocm-prom-metrics/
+ExecStart=/home/jerome/source/rocm-prom-metrics/venv/bin/python /home/jerome/source/rocm-prom-metrics/server.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
