@@ -15,6 +15,7 @@ I have "fixed" this with a patch to rocm-smi, so that it uses the same function 
 
 ```sh
 sudo cp ./smi_patch/rocm-smi-patched.py $(which rocm-smi)
+sudo systemctl restart rocm-prom-metrics.service
 ```
 
 ### Power usage not telemetered
