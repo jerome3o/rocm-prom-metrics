@@ -20,6 +20,9 @@ import _thread
 import time
 from time import ctime
 from subprocess import check_output
+
+# Hack because I accidentally broke something (jerome)
+sys.path.append("/opt/rocm/libexec/rocm_smi/")
 from rsmiBindings import *
 
 # rocmSmiLib_cli version. Increment this as needed.
@@ -1811,6 +1814,7 @@ def showMemUse(deviceList):
             ret = str((100 * (float(memInfo[0]) / float(memInfo[1]))))
 
         printLog(device, 'GPU memory use (%)', ret)
+        printLog(device, 'GPU memory use', memInfo[0])
         util_counters = getCoarseGrainUtil(device, "Memory Activity")
         if util_counters != -1:
             for ut_counter in util_counters:
