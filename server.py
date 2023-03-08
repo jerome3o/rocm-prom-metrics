@@ -41,6 +41,10 @@ _metrics = [
     "Accumulated Energy (uJ)",  # "52583068287.32"
 ]
 
+_metrics_aliases = {
+    "GPU memory use": "GPU_memory_use_bytes",
+}
+
 _labels = [
     "Serial Number",  # "ac1b58f8c066790f",
     "GPU ID",  # "0x73bf",
@@ -129,6 +133,11 @@ def _get_prom_friendly_metric_name(metric_name: str) -> str:
     """
     Convert metric names to prometheus friendly names
     """
+
+    # apply alias if present
+    metric_name = _metrics_aliases.get(metric_name, metric_name)
+
+    # replace spaces with underscores
     metric_name = re.sub(r"[^a-zA-Z0-9_]", "_", metric_name).lower()
 
     # remove trailing/leading underscores
