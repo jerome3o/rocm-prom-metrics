@@ -34,6 +34,7 @@ _metrics = [
     "Average Graphics Package Power (W)",  # "35.0",
     "GPU use (%)",  # "99",
     "GPU memory use (%)",  # "0",
+    "GPU memory use",  # "0",
     "PCIe Replay Count",  # "0",
     "Voltage (mV)",  # "1018",
     "Energy counter",  # "3436801806",
