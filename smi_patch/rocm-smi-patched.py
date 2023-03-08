@@ -1816,6 +1816,7 @@ def showMemUse(deviceList):
 
         printLog(device, 'GPU memory use (%)', ret)
         printLog(device, 'GPU memory use', memInfo[0])
+        printLog(device, 'GPU memory available', memInfo[1])
         util_counters = getCoarseGrainUtil(device, "Memory Activity")
         if util_counters != -1:
             for ut_counter in util_counters:
