@@ -1557,7 +1557,8 @@ def showCurrentFans(deviceList):
         (fanLevel, fanSpeed) = getFanSpeed(device)
         fanSpeed = round(fanSpeed)
         if fanLevel == 0 or fanSpeed == 0:
-            printLog(device, 'Unable to detect fan speed for GPU %d' % (device), None)
+            # printLog(device, 'Unable to detect fan speed for GPU %d' % (device), None)
+            printLog(device, 'Fan speed (%)', str(fanSpeed))
             logging.debug('Current fan speed is: %d\n' % (fanSpeed) + \
                           '       Current fan level is: %d\n' % (fanLevel) + \
                           '       (GPU might be cooled with a non-PWM fan)')
