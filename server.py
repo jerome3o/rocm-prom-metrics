@@ -39,6 +39,7 @@ _metrics = [
     "Voltage (mV)",  # "1018",
     "Energy counter",  # "3436801806",
     "Accumulated Energy (uJ)",  # "52583068287.32"
+    "Fan speed (%)",
 ]
 
 _metrics_aliases = {
@@ -164,7 +165,6 @@ def _get_label_dict() -> Dict[str, str]:
 
 
 def _define_gauges(output: dict) -> Union[Dict[str, Gauge], Dict[str, str]]:
-
     # TODO(j.swannack): need to make guages+labels adhere
     #   to prometheus naming conventions
 
@@ -183,7 +183,6 @@ def _define_gauges(output: dict) -> Union[Dict[str, Gauge], Dict[str, str]]:
 
 
 def main():
-
     # get output dict
     output = get_smi_output()
 
@@ -201,7 +200,6 @@ def main():
 
         # update gauges
         for card_name, card_metrics in output.items():
-            
             # ignore system
             if card_name == "system":
                 continue
@@ -210,7 +208,6 @@ def main():
             label_values = {label: card_metrics[label_raw] for label_raw, label in labels.items()}
 
             for metric_name, metric_value in card_metrics.items():
-                
                 if metric_name not in _metrics:
                     continue
 
