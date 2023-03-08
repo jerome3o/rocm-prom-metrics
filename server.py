@@ -40,10 +40,12 @@ _metrics = [
     "Energy counter",  # "3436801806",
     "Accumulated Energy (uJ)",  # "52583068287.32"
     "Fan speed (%)",
+    "Average Graphics Package Power (W)",
 ]
 
 _metrics_aliases = {
     "GPU memory use": "GPU_memory_use_bytes",
+    "Average Graphics Package Power (W)": "average_power_watts",
 }
 
 _labels = [
