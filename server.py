@@ -40,6 +40,7 @@ _metrics = [
     "Energy counter",  # "3436801806",
     "Accumulated Energy (uJ)",  # "52583068287.32"
     "Fan speed (%)",
+    "GPU memory available",
 ]
 
 _metrics_aliases = {
